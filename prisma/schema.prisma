@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model BusinessClient {
+  id            Int                  @id @default(autoincrement())
+  name          String
+  industry      String?
+  contact_email String?
+  contact_phone String?
+  created_at    DateTime             @default(now())
+  customers     Customer[]
+  campaigns     MarketingCampaign[]
+  recommendations Recommendation[]
+
+  @@map("business_clients")
+}
+
+model Customer {
+  id                 Int                  @id @default(autoincrement())
+  business_client_id Int
+  first_name         String?
+  last_name          String?
+  email              String?
+  phone              String?
+  date_of_birth      DateTime?
+  gender             String?
+  registered_at      DateTime             @default(now())
+  orders             Order[]
+  engagements        CustomerEngagement[]
+  business_client    BusinessClient       @relation(fields: [business_client_id], references: [id])
+
+  @@map("customers")
+}
+
+model Product {
+  id            Int            @id @default(autoincrement())
+  name          String
+  category      String?
+  price         Decimal?
+  created_at    DateTime       @default(now())
+  order_details OrderDetail[]
+
+  @@map("products")
+}
+
+model Discount {
+  id            Int      @id @default(autoincrement())
+  name          String
+  description   String?
+  discount_rate Decimal?
+  valid_from    DateTime?
+  valid_until   DateTime?
+  orders        Order[]
+
+  @@map("discounts")
+}
+
+model Order {
+  id            Int            @id @default(autoincrement())
+  customer_id   Int
+  order_date    DateTime       @default(now())
+  total_amount  Decimal?
+  discount_id   Int?
+  customer      Customer        @relation(fields: [customer_id], references: [id])
+  discount      Discount?       @relation(fields: [discount_id], references: [id])
+  order_details OrderDetail[]
+
+  @@map("orders")
+}
+
+model MarketingCampaign {
+  id                 Int                  @id @default(autoincrement())
+  business_client_id Int
+  campaign_name      String?
+  start_date         DateTime?
+  end_date           DateTime?
+  budget             Decimal?
+  channel            String?
+  engagements        CustomerEngagement[]
+  business_client    BusinessClient       @relation(fields: [business_client_id], references: [id])
+
+  @@map("marketing_campaigns")
+}
+
+model CustomerEngagement {
+  id              Int               @id @default(autoincrement())
+  customer_id     Int
+  engagement_type String?
+  campaign_id     Int
+  engagement_date DateTime         @default(now())
+  customer        Customer          @relation(fields: [customer_id], references: [id])
+  campaign        MarketingCampaign @relation(fields: [campaign_id], references: [id])
+
+  @@map("customer_engagement")
+}
+
+model Recommendation {
+  id                  Int           @id @default(autoincrement())
+  business_client_id  Int
+  generated_at        DateTime      @default(now())
+  recommendation_text String?
+  recommendation_type String?
+  business_client     BusinessClient @relation(fields: [business_client_id], references: [id])
+
+  @@map("recommendations")
+}
+
+model OrderDetail {
+  id         Int     @id @default(autoincrement())
+  order_id   Int
+  product_id Int
+  quantity   Int
+  unit_price Decimal
+  order      Order   @relation(fields: [order_id], references: [id])
+  product    Product @relation(fields: [product_id], references: [id])
+
+  @@map("order_details")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  username      String   @unique
+  password_hash String
+  full_name     String?
+  email         String?
+  role          String?
+  created_at    DateTime @default(now())
+
+  @@map("users")
+}
